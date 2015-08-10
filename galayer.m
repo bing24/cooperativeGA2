@@ -21,7 +21,7 @@ classdef galayer < handle
             optimizor.charger_number=m;
         end
         
-        function  EvaluatingAll(optimizor,sub, map, gaConfig,chargers)
+        function  EvaluatingAll(optimizor,sub, map, gaConfig,chargers,randIndexes)
             for nn= 1:gaConfig.NumberofChargers
                 chargers(nn).locationx=zeros(sub(1).chromo_number*gaConfig.NumberofChargers,gaConfig.PopulationSize);
                 chargers(nn).locationy=zeros(sub(1).chromo_number*gaConfig.NumberofChargers,gaConfig.PopulationSize);
@@ -56,10 +56,21 @@ classdef galayer < handle
                         end
                     end
                 end
-                for jj = 1:gaConfig.NumberofChargers
-                    chargers(jj).locationx(1:length(chargers(jj).temppx),i) = chargers(jj).temppx;
-                    chargers(jj).locationy(1:length(chargers(jj).temppy),i) = chargers(jj).temppy;
+                if sum(i==randIndexes)~=0 && isempty(chargers(1).best_chromo)==0
+                    
+                    for jj = 1:gaConfig.NumberofChargers
+                      chargers(jj).locationx(:,i) = chargers(jj).best_chromo(:,1);
+                      chargers(jj).locationy(:,i) = chargers(jj).best_chromo(:,2);
+                    end
+                    
+                else
+                    
+                    for jj = 1:gaConfig.NumberofChargers
+                      chargers(jj).locationx(1:length(chargers(jj).temppx),i) = chargers(jj).temppx;
+                      chargers(jj).locationy(1:length(chargers(jj).temppy),i) = chargers(jj).temppy;
+                    end
                 end
+                    
                 temp_dis=[];
                 for jj= 1: gaConfig.NumberofChargers
                     MeetingNumbers = length(nonzeros(chargers(jj).locationx(:,i)));
@@ -147,7 +158,9 @@ classdef galayer < handle
             [optimizor.minimumFitness, optimizor.bestIndividualIndex] = min(optimizor.fitness);
             fprintf('Minimum Fitness: %d\n',optimizor.minimumFitness);
             fprintf('Minimum Fitness index: %d\n',optimizor.bestIndividualIndex);
-            
+            for i=1:gaConfig.NumberofChargers
+                chargers(i).best_chromo=[chargers(i).locationx(:,optimizor.bestIndividualIndex) chargers(i).locationy(:,optimizor.bestIndividualIndex)];
+            end
             
         end % function
         function EvaluatingWorking(optimizor,sub,map,gaConfig)

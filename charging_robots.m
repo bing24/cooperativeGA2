@@ -13,6 +13,7 @@ properties
         total_distance
         judger
         figure_handle
+        best_chromo
     end
     
     methods
@@ -73,6 +74,12 @@ properties
             title(optimizor.minimumFitness)
             
         end %function
-        
+        function preserving_chargers(obj,randIndexes)
+            bestChromosome =obj.chromo(:,obj.bestIndividualIndex);
+            obj.locationx(:,randIndexes) = repmat(bestChromosome,1,gaConfig.numberOfReplications);
+            obj.locationy(:,randIndexes) = repmat(bestChromosome,1,gaConfig.numberOfReplications);
+            
+            
+        end
     end %methods
 end %classdef

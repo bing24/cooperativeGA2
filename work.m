@@ -79,11 +79,12 @@ for i=1:generation
 	drawnow
 end
 for i=1:generation
+    
 	for agent_number = 1:number_of_spicies
 	    % population(agent_number)= InitializePopulation(map, gaConfig);
 	    Evaluating(population(agent_number),map,gaConfig);
 	end
-		EvaluatingAll(optimizor,population,map,gaConfig,chargers);
+		EvaluatingAll(optimizor,population,map,gaConfig,chargers,randIndexes);
 	for agent_number = 1:number_of_spicies
 		population(agent_number).fitness=optimizor.fitness;
 		population(agent_number).bestIndividualIndex=optimizor.bestIndividualIndex;
