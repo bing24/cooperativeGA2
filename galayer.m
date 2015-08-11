@@ -25,6 +25,8 @@ classdef galayer < handle
             for nn= 1:gaConfig.NumberofChargers
                 chargers(nn).locationx=zeros(sub(1).chromo_number*gaConfig.NumberofChargers,gaConfig.PopulationSize);
                 chargers(nn).locationy=zeros(sub(1).chromo_number*gaConfig.NumberofChargers,gaConfig.PopulationSize);
+                chargers(nn).nodes_distance=zeros(sub(1).chromo_number*gaConfig.NumberofChargers,gaConfig.PopulationSize);
+                
             end
             for i=1:gaConfig.PopulationSize
                 % Calculate the total distance for all working robots
@@ -56,7 +58,7 @@ classdef galayer < handle
                         end
                     end
                 end
-                if sum(i==randIndexes)~=0 && isempty(chargers(1).best_chromo)==0
+                if sum(i==randIndexes)==1 && isempty(chargers(1).best_chromo)==0
                     
                     for jj = 1:gaConfig.NumberofChargers
                       chargers(jj).locationx(:,i) = chargers(jj).best_chromo(:,1);
@@ -73,6 +75,7 @@ classdef galayer < handle
                     
                 temp_dis=[];
                 for jj= 1: gaConfig.NumberofChargers
+
                     MeetingNumbers = length(nonzeros(chargers(jj).locationx(:,i)));
                     for gg = 1:MeetingNumbers-1
                         chargers(jj).nodes_distance(gg,i)=norm([nonzeros(chargers(jj).locationx(gg,i)),nonzeros(chargers(jj).locationy(gg,i))]-[nonzeros(chargers(jj).locationx(gg+1,i)),nonzeros(chargers(jj).locationy(gg+1,i))]);

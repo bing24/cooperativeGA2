@@ -56,8 +56,8 @@ for agent_number = 1:number_of_spicies
 	Mutating(population(agent_number),gaConfig,randIndexes)
 end
 
-generation=20;
-for i=1:generation
+generation=500;
+while sum(optimizor.cover>0.8)<gaConfig.PopulationSize/3
 	for agent_number = 1:number_of_spicies
 	    % population(agent_number)= InitializePopulation(map, gaConfig);
 	    Evaluating(population(agent_number),map,gaConfig);
