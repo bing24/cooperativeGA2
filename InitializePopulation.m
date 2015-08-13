@@ -68,6 +68,7 @@ classdef InitializePopulation < handle
             obj.charging_enough=[];
             % Generate locations for working robots and charging robots
             for j=1:gaConfig.PopulationSize
+                
                 for i=1:obj.gene_length
                     if i==1
                         obj.currentx(i,j)=obj.initialx;
@@ -142,15 +143,8 @@ classdef InitializePopulation < handle
                 
                 obj.cost_dis(j)=length(nonzeros(obj.chromo(:,j)));
                 
-                % Calculate the travel distance of charging robots
                 
-                for i= 1: size(obj.charging_locationx,1)-1
-                    if obj.charging_locationx(i+1,j)~= 0
-                        obj.nodes_dis_charging(i,j)=norm([obj.charging_locationx(i,j),obj.charging_locationy(i,j)]-[obj.charging_locationx(i+1,j),obj.charging_locationy(i+1,j)]);
-                    end
-
-                end
-                obj.cost_dis_charging(1,j)=sum(obj.nodes_dis_charging(:,j));
+                
       
             end
             

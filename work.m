@@ -3,7 +3,7 @@ close all;
 tic
 
 % Load inputs
-map = Map('map_image.bmp','resolution',200,'hieght',2000);
+map = Map('map_image.bmp','resolution',20,'hieght',200);
 
 % map.show('border')
 represent(map)
@@ -18,15 +18,16 @@ gaConfig.CrossoverRate = 0.8;
 gaConfig.MutationRate = 0.03;
 gaConfig.TournamentSize=10;
 gaConfig.mutationProbability=0.01;
-gaConfig.numberOfReplications = 2;
+gaConfig.numberOfReplications = 10;
 
 optimizor=galayer(5,4);
 contour(map.matrix,1,'black','linewidth',5)
 hold on
 plot(map.mission_location(:,1),map.mission_location(:,2),'.')
+figure
 
 % Generatue initial populations
-initials=[3,2;3,7;8,9;10,7;12,3];
+initials=[2,3;3,7;8,9;10,7;12,3];
 Colors=[1 1 0;1 0 1;0 1 1;1 0 0;0 0 1];
 number_of_spicies = 5;
 for agent_number = 1:number_of_spicies
@@ -56,8 +57,35 @@ for agent_number = 1:number_of_spicies
 	Mutating(population(agent_number),gaConfig,randIndexes)
 end
 
-generation=500;
-while sum(optimizor.cover>0.8)<gaConfig.PopulationSize/3
+generation=1000;
+% optimizing coverage
+while sum(optimizor.cover==1)==0 && optimizor.count<1000
+	for agent_number = 1:number_of_spicies
+	    % population(agent_number)= InitializePopulation(map, gaConfig);
+	    Evaluating(population(agent_number),map,gaConfig);
+	end
+		EvaluatingCover(optimizor,population,map,gaConfig);
+	for agent_number = 1:number_of_spicies
+		population(agent_number).fitness=optimizor.fitness;
+		population(agent_number).bestIndividualIndex=optimizor.bestIndividualIndex;
+	end
+	for agent_number = 1:number_of_spicies
+		Selecting(population(agent_number),gaConfig,0.5);
+	end
+		% Mutate
+		randIndexes = ceil(rand(1,gaConfig.numberOfReplications).*gaConfig.PopulationSize);
+	for agent_number = 1:number_of_spicies
+		Mutating(population(agent_number),gaConfig,randIndexes)
+	end
+	
+	plotWorking(optimizor,population,gaConfig)
+	
+
+	drawnow
+end
+%optimizing working distance
+% while  sum(diff(optimizor.record_dis_working(end-200:end)))~=0 && optimizor.count<2000
+while  optimizor.minimumFitness>57 && optimizor.count<2000
 	for agent_number = 1:number_of_spicies
 	    % population(agent_number)= InitializePopulation(map, gaConfig);
 	    Evaluating(population(agent_number),map,gaConfig);
@@ -75,9 +103,13 @@ while sum(optimizor.cover>0.8)<gaConfig.PopulationSize/3
 	for agent_number = 1:number_of_spicies
 		Mutating(population(agent_number),gaConfig,randIndexes)
 	end
+	
 	plotWorking(optimizor,population,gaConfig)
+	
 	drawnow
 end
+%cooperative part
+figure
 for i=1:generation
     
 	for agent_number = 1:number_of_spicies

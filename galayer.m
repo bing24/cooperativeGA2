@@ -12,6 +12,12 @@ classdef galayer < handle
         cover
         minimumFitness
         bestIndividualIndex
+        iteration;
+        figure_handle1;
+        figure_handle2;
+        count=0;
+        record_dis_working;
+        record_cover;
     end
     
     methods
@@ -22,6 +28,9 @@ classdef galayer < handle
         end
         
         function  EvaluatingAll(optimizor,sub, map, gaConfig,chargers,randIndexes)
+            optimizor.count=optimizor.count+1;
+            optimizor.iteration(optimizor.count)=optimizor.count;
+
             for nn= 1:gaConfig.NumberofChargers
                 chargers(nn).locationx=zeros(sub(1).chromo_number*gaConfig.NumberofChargers,gaConfig.PopulationSize);
                 chargers(nn).locationy=zeros(sub(1).chromo_number*gaConfig.NumberofChargers,gaConfig.PopulationSize);
@@ -102,8 +111,15 @@ classdef galayer < handle
                     end
                 end
                 optimizor.cover(i)=count/size(map.mission_num,1);
+
+                % adding penalty to low coverage
+                if optimizor.cover(i)<0.9
+                    optimizor.cover(i)=optimizor.cover(i)*0.001;
+                end
+
                  % calculate charging time and operating time
                 for j=1:optimizor.agent_number
+                    
                     
                 count=1;
                 ii=1;
@@ -139,7 +155,12 @@ classdef galayer < handle
                     tempp=tempp(1:end-1);
                 end
                 
-                sub(j).charging_enough(1,i)=sum(temp>tempp)/length(temp);
+                if isempty(tempp)
+                    sub(j).charging_enough(1,i)=0.001; % adding penalty to zero charging trajectory
+                else
+                    sub(j).charging_enough(1,i)=sum(temp>tempp)/length(temp);
+                end
+
                 charging_enough_temp(j)=sub(j).charging_enough(1,i);
                 end
                 % Consider the maximum speed constraint
@@ -166,8 +187,9 @@ classdef galayer < handle
             end
             
         end % function
-        function EvaluatingWorking(optimizor,sub,map,gaConfig)
-           
+        function EvaluatingCover(optimizor,sub,map,gaConfig)
+            optimizor.count=optimizor.count+1;
+            optimizor.iteration(optimizor.count)=optimizor.count;
             for i=1:gaConfig.PopulationSize
                 % Calculate the total distance for all working robots
                 temp=[];
@@ -189,15 +211,65 @@ classdef galayer < handle
                     end
                 end
                 optimizor.cover(i)=count/size(map.mission_num,1);
-                 
+                
+                
+
+
                 % optimizor.fitness(i)=(optimizor.distance_working(i)+optimizor.distance_charging(i))/optimizor.cover(i)/optimizor.charging_enough(i);
                 
-                optimizor.fitness(i)=optimizor.distance_working(i)/optimizor.cover(i);
+                % optimizor.fitness(i)=optimizor.distance_working(i)/optimizor.cover(i);
+                optimizor.fitness(i)=1/optimizor.cover(i);
+                if optimizor.cover(i) < 1
+                    optimizor.fitness(i)=optimizor.fitness(i)*10;
+                end
             end
             [optimizor.minimumFitness, optimizor.bestIndividualIndex] = min(optimizor.fitness);
             fprintf('Minimum Fitness: %d\n',optimizor.minimumFitness);
             fprintf('Minimum Fitness index: %d\n',optimizor.bestIndividualIndex);
-             
+            optimizor.record_cover(optimizor.count)=optimizor.cover(optimizor.bestIndividualIndex);
+            optimizor.record_dis_working(optimizor.count)=optimizor.distance_working(optimizor.bestIndividualIndex); 
+        end
+         function EvaluatingWorking(optimizor,sub,map,gaConfig)
+            optimizor.count=optimizor.count+1;
+            optimizor.iteration(optimizor.count)=optimizor.count;
+            for i=1:gaConfig.PopulationSize
+                % Calculate the total distance for all working robots
+                temp=[];
+                for j=1:optimizor.agent_number
+                    temp(j)=sub(j).cost_dis(i);
+                    optimizor.distance_working(i)=sum(temp);
+                end
+                           
+                % Calculate the coverage of all working robots
+                count=0;
+                
+                for ii=1:size(map.mission_num,1)
+                    cc=[];
+                    for jj=1:optimizor.agent_number
+                        cc=[cc; map.mission_num(ii)~=sub(jj).chromo_index(:,i)];
+                    end
+                    if sum(cc)~=optimizor.gene_length*optimizor.agent_number
+                        count=count+1;
+                    end
+                end
+                optimizor.cover(i)=count/size(map.mission_num,1);
+                
+                
+
+
+                optimizor.fitness(i)=optimizor.distance_working(i)/optimizor.cover(i);
+                
+                
+                
+                if optimizor.cover(i) < 1
+                    optimizor.fitness(i)=optimizor.fitness(i)*10;
+                end
+            end
+            [optimizor.minimumFitness, optimizor.bestIndividualIndex] = min(optimizor.fitness);
+            fprintf('Minimum Fitness: %d\n',optimizor.minimumFitness);
+            fprintf('Minimum Fitness index: %d\n',optimizor.bestIndividualIndex);
+            optimizor.record_cover(optimizor.count)=optimizor.cover(optimizor.bestIndividualIndex);
+            optimizor.record_dis_working(optimizor.count)=optimizor.distance_working(optimizor.bestIndividualIndex); 
         end
         
         function chargingEvaluate(a,chargers,obj,gaConfig)
@@ -245,6 +317,7 @@ classdef galayer < handle
             
         end
         function plotall(obj,workers,chargers,gaConfig)
+            figure (1)
             for agent_number = 1:gaConfig.NumberofWorkers
                 hold on
                 Ploting(workers(agent_number))
@@ -257,11 +330,30 @@ classdef galayer < handle
         end
         
         function plotWorking(obj,workers,gaConfig)
+            figure(1)
             for agent_number = 1:gaConfig.NumberofWorkers
                 hold on
                 Ploting(workers(agent_number))
-            end  
+            end
+            title(obj.count) 
+            figure(2)
+            
+            if ishandle(obj.figure_handle1)
+                delete(obj.figure_handle1)
+            end
+            subplot(2,1,1)
+            obj.figure_handle1=semilogx(obj.iteration,obj.record_cover);
+            xlabel('iteration')
+            ylabel('Coverage')
+            if ishandle(obj.figure_handle2)
+                delete(obj.figure_handle2)
+            end
+            subplot(2,1,2)
+            obj.figure_handle2=semilogx(obj.iteration,obj.record_dis_working);
+            xlabel('iteration')
+            ylabel('Total traveling distance of working robots')
         end
+
     end % method
     
 end % classdef
