@@ -317,7 +317,7 @@ classdef galayer < handle
             
         end
         function plotall(obj,workers,chargers,gaConfig)
-            figure (1)
+            figure (3)
             for agent_number = 1:gaConfig.NumberofWorkers
                 hold on
                 Ploting(workers(agent_number))
